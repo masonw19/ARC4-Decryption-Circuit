@@ -1,4 +1,4 @@
-# Lab 3: Memories from Room 40
+# ARC4 Decryption Circuit
 
 ## Contents
 
