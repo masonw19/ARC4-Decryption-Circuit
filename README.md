@@ -108,9 +108,9 @@ We complete the ARC4 algorithm with the `arc4_3.sv` file. This should instantiat
 
 ### Cracking ARC4
 
-Now comes the shaken-not-stirred part: you will decrypt some encrypted messages _without_ knowing the key ahead of time.
+Now to decrypt some encrypted messages _without_ knowing the key ahead of time we will implement a `crack` module.
 
-How will we know if we've decrypted the messages correctly, though? The insight here is that messages that we are looking for are human-readable. For the purposes of this lab, an encrypted message is deemed to be cracked if its characters consist entirely of byte values between 'h20 and 'h7E inclusive (i.e., readable ASCII).
+The messages that we are looking for are human-readable. An encrypted message is deemed to be cracked if its characters consist entirely of byte values between 'h20 and 'h7E inclusive (i.e., readable ASCII).
 
 The `crack` module is very much like `arc4`, but both _S_ and _PT_ are now internal, _key_ is now an output, and the new _key_valid_ output indicates that _key_ may be read. On `en`, this module should sequentially search through the key space starting from key 'h000000 and incrementing by 1 every iteration (to make marking tractable). Once the computation is complete, it should assert `rdy` and, only if it found a valid decryption key, also set `key_valid` to 1 and `key` to the discovered secret key. If `key_valid` is 1, the `pt` memory inside `crack` should contain the corresponding plaintext in length-prefixed format.
 
@@ -126,23 +126,6 @@ The toplevel `task4` module should, on reset, use `crack` to process the message
 
 <p align="center"><img src="figures/hex-digits.svg" title="hex digits" width="60%" height="60%"></p>
 
-The tests for `task4` go in `tb_rtl_task4.sv` and `tb_syn_task4.sv`, as usual.
-
-Remember to check that the instance hierarchy for the memories is correct. Starting from `task4`, the memories should be accessible as
-
-    ct.altsyncram_component.m_default.altsyncram_inst.mem_data
-    c.pt.altsyncram_component.m_default.altsyncram_inst.mem_data
-    c.a4.s.altsyncram_component.m_default.altsyncram_inst.mem_data
-
-in RTL simulation, and
-
-    \ct|altsyncram_component|auto_generated|altsyncram1|ram_block3a0 .ram_core0.ram_core0.mem
-    \c|pt|altsyncram_component|auto_generated|altsyncram1|ram_block3a0 .ram_core0.ram_core0.mem
-    \c|a4|s|altsyncram_component|auto_generated|altsyncram1|ram_block3a0 .ram_core0.ram_core0.mem
-
-in netlist simulation.
-
-
 ### Cracking in parallel
 
 To speed up cracking, we will now run two `crack` modules at the same time: the first will start the search at 0 and increment by 2, and the second will start at 1 and also increment by 2. You will implement this in `doublecrack`. The `doublecrack` module instantiates two `crack` modules. For this task (and only in this folder), you may **add** ports to the `crack` module in this task, but you **may not** remove or modify existing ports.
@@ -152,24 +135,3 @@ The `doublecrack` ports are the same as in the `crack` module in Task 4; in part
 The `doublecrack` also instantiates one shared _PT_ memory. The final length-prefixed plaintext must be in this memory if `key_valid` is high regardless of which `crack` core decrypted the message. Each `crack` core will have its own _PT_ memory as well; the length-prefixed plaintext must also be in the _PT_ memory in the `crack` core that decrypted it.
 
 Feel free to create additional instances of the memories you've already generated (`s_mem`, `ct_mem`, and `pt_mem`), provided you do not change the instance IDs or configurations of the memories predefined in the skeleton files.
-
-The toplevel `task5` should do exactly the same thing as `task4` but about twice as quickly. As before, you will need comprehensive testbenches in `tb_rtl_doublecrack`, `tb_rtl_crack`, `tb_rtl_task5`, `tb_syn_doublecrack`, `tb_syn_crack`, and `tb_syn_task5`. Because you will likely modify the `crack` module, its testbench in this task must be comprehensive even if you already tested most of it in Task 4.
-
-_Hint:_ Do not be discouraged by highfalutin' words like “parallel” — if you have a working `crack` module, this task is actually quite easy.
-
-Remember to check that the instance hierarchy for the memories is correct so the autograder can access them. Starting from `task5`, the memories we care about should be accessible as
-
-    ct.altsyncram_component.m_default.altsyncram_inst.mem_data
-    dc.pt.altsyncram_component.m_default.altsyncram_inst.mem_data
-    dc.c1.pt.altsyncram_component.m_default.altsyncram_inst.mem_data
-    dc.c2.pt.altsyncram_component.m_default.altsyncram_inst.mem_data
-
-in RTL simulation, and
-
-    \ct|altsyncram_component|auto_generated|altsyncram1|ram_block3a0 .ram_core0.ram_core0.mem
-    \dc|pt|altsyncram_component|auto_generated|altsyncram1|ram_block3a0 .ram_core0.ram_core0.mem
-    \dc|c1|pt|altsyncram_component|auto_generated|altsyncram1|ram_block3a0 .ram_core0.ram_core0.mem
-    \dc|c2|pt|altsyncram_component|auto_generated|altsyncram1|ram_block3a0 .ram_core0.ram_core0.mem
-
-in netlist simulation.
-
