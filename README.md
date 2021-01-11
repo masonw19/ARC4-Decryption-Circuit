@@ -36,7 +36,7 @@ and proceeds as shown in this pseudocode:
     for k = 0 to message_length-1:
         plaintext[k] = pad[k] xor ciphertext[k]  -- xor each byte
 
-The length of the secret key can vary — in this lab, we will use a smaller key of 24 bits (3 bytes) to ensure that you can “crack” the encryption in a reasonable amount of time.
+The length of the secret key that we will use is 24 bits (3 bytes) to ensure that you can “crack” the encryption in a reasonable amount of time.
 
 Note that the key is stored [big-endian](https://en.wikipedia.org/wiki/Endianness). The following diagram shows the values of key[0], key[1], and key[2] for the 24-bit secret key of 'b000000110101111100111100 = 'h035F3C.
 
@@ -64,24 +64,6 @@ Finally, some requests come with arguments. For example, Task 3 requires you to 
 <p align="center"><img src="figures/rdy-en-arg.svg" title="ready-enable microprotocol with an argument" width="65%" height="65%"></p>
 
 Note: Be careful about combinational loops. For example, since `en` can derive from `rdy` through combinational logic, `rdy` cannot also derive from `en` combinationally; otherwise, the two signals will form a wire loop.
-
-## Designing the Decryption Circuit
-
-### General implementation requirements
-
-In your design, ensure that:
-
-- all sequential logic triggers on positive clock edge only,
-- resets are active-low and asynchronous throughout,
-- there is no logic on the clock or reset paths,
-- there are no latches, and
-- there are no tristate elements.
-
-(Naturally, these rules don't apply to your testbench files.)
-
-In this lab, it will also be especially important that your memory instances are accessible exactly via the instance names / hierarchy we defined, since otherwise the autograder will not be able to test your submission.
-
-Finally, remember to copy any modules you develop in one task and use in another task to the folder where they are used, and do not submit any generated memories. Carefully read the [Deliverables and evaluation](#deliverables-and-evaluation) section for details.
 
 ### Task 1: ARC4 state initialization
 
