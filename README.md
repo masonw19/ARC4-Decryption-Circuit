@@ -40,7 +40,7 @@ The length of the secret key that we will use is 24 bits (3 bytes) to ensure tha
 
 ### The ready-enable microprotocol
 
-The handshake has two sides: the “caller” and the “callee.” Whenever the callee is ready to accept a request, it asserts its `rdy` signal. If `rdy` is asserted, the caller may assert `en` to make a “request” to the callee. The following timing diagram illustrates this:
+This project uses a handshake protocol to connect modules that have variable latencies. The handshake has two sides: the “caller” and the “callee.” Whenever the callee is ready to accept a request, it asserts its `rdy` signal. If `rdy` is asserted, the caller may assert `en` to make a “request” to the callee. The following timing diagram illustrates this:
 
 <p align="center"><img src="figures/rdy-en.svg" title="ready-enable microprotocol" width="65%" height="65%"></p>
 
@@ -114,3 +114,7 @@ You can find this module in the `crack.sv` module in the `src` folder.
 ### Cracking in parallel
 
 To speed up cracking, we will now run two `crack` modules at the same time: the first will start the search at 0 and increment by 2, and the second will start at 1 and also increment by 2. This is implemented in the in `doublecrack` module. The `doublecrack` module instantiates two `crack` modules.
+
+#### Credit
+
+This project is made as part of a lab for a course that I had taken at the University of British Columbia's courses. 
