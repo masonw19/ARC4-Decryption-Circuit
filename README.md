@@ -62,38 +62,16 @@ Finally, some requests come with arguments. For example, Task 3 requires you to 
 <p align="center"><img src="figures/rdy-en-arg.svg" title="ready-enable microprotocol with an argument" width="65%" height="65%"></p>
 
 
-### Task 1: ARC4 state initialization
+### ARC4 state initialization
 
-In the `task1` folder you will find a `init.sv` and a toplevel file `task1.sv`. In `init.sv`, you will will implement the first step of ARC4, where the cipher state S is initialized to [0..255]:
+The `src` folder you will find a `init5.sv` will implement the first step of ARC4, where the cipher state S is initialized to [0..255]:
 
     for i = 0 to 255:
         s[i] = i
 
-The `init` module follows the ready/enable microprotocol [described above](#the-ready-enable-microprotocol).
-You will see that this declares the component that you have just created using the Wizard.
+The `init` module follows the ready/enable microprotocol.
 
-First, generate the `s_mem` memory exactly as described above.
-
-Next, examine the toplevel `task1` module. You will find taht it already instantiates the `s_mem` RAM you generated earlier using the MF Wizard. `KEY[3]` will serve as our reset signal in `task1`. Add an instance of your `init` module and connect it to the RAM instance. For the final submission, make sure that `init` is activated **exactly once** every time after reset, and that _S_ is not written to after `init` finishes. Note: **do not** rename the memory instance — we need to be able to access it from a testbench to test your code.
-
-Add comprehensive tests in `tb_rtl_init.sv`, `tb_rtl_task1.sv`, `tb_syn_init.sv`, `tb_syn_task1.sv`.
-
-Remember to follow the ready-enable microprotocol we defined earlier. It is not outside the realm of possibility that we could replace either `init` or `task1` with another implementation when testing your code.
-
-Also, be sure that you follow the instance names in the template files. Check that, starting from `task1`, the ARC4 state memory is accessible in simulation via either
-
-    s.altsyncram_component.m_default.altsyncram_inst.mem_data
-
-in RTL simulation, and
-
-    \s|altsyncram_component|auto_generated|altsyncram1|ram_block3a0 .ram_core0.ram_core0.mem
-
-in netlist simulation.
-
-Proceed to import your pin assignments and synthesize as usual. Examine the memory contents in RTL simulation, post-synthesis netlist simulation, and on the physical FPGA.
-
-
-### Task 2: The Key-Scheduling Algorithm
+### The Key-Scheduling Algorithm
 
 Many symmetric ciphers, including ARC4, have a phase called the _Key-Scheduling Algorithm_ (KSA). The objective of the KSA is to spread the key entropy evenly across _S_ to prevent statistical correlations in the generated ciphertext that could be used to break the cipher. ARC4 does this by swapping values of _S_ at various indices:
 
@@ -102,49 +80,9 @@ Many symmetric ciphers, including ARC4, have a phase called the _Key-Scheduling 
         j = (j + s[i] + key[i mod keylength]) mod 256   -- for us, keylength is 3
         swap values of s[i] and s[j]
 
-(and, in fact, does not completely succeed at this, which can be exploited to break the cipher).
+In folder `src` you will find `ksa4.sv`, which you will fill out to implement the KSA phase. Like `init`, the `ksa` module will implement the ready/enable microprotocol.
 
-In folder `task2` you will find `ksa.sv`, which you will fill out to implement the KSA phase. Like `init`, the `ksa` module will implement the ready/enable microprotocol. Note that `ksa` **must not** include the functionality of `init`. Ensure that the KSA is comprehensively tested in your `tb_rtl_ksa.sv` and `tb_syn_ksa.sv` testbenches.
-
-Next, finish the toplevel implementation in `task2.sv`. This module should instantiate the _S_ memory as well as `init` (from Task 1) and `ksa`. To set the key, we will use the switches on the DE1-SoC. There are only ten switches, so **for tasks 2 and 3 only** the toplevel module (here, `task2` but not `init`) should hardwire bits [23:10] of the `ksa` _key_ input to zero; we will use _SW_[9:0] as _key_[9:0]. (Don't confuse the encryption _key_ input to `ksa` with the _KEY_ input to `task2`, which refers to the DE1-SoC buttons.)
-
-On reset (`KEY[3]`), `task2` will first run `init` and then `ksa`, just like in the ARC4 pseudocode. Again, make sure that your code obeys the module interfaces and does not rely on exact timing properties of other modules. As usual, test this comprehensively in `tb_rtl_task2.sv` and `tb_syn_task2.sv`.
-
-To check your work, here are the final contents of _S_ for the key `'h00033C` after both `init` and `ksa` have finished:
-
-    0000: b4 04 2b e5 49 0a 90 9a e4 17 f4 10 3a 36 13 77
-    0010: 11 c4 bc 38 4f 6d 98 06 6e 3d 2c ae cd 26 40 a2
-    0020: c2 da 67 68 5d 3e 02 73 03 aa 94 69 6a 97 6f 33
-    0030: 63 5b 8a 58 d9 61 f5 46 96 55 7d 53 5f ab 07 9c
-    0040: a7 72 31 a9 c6 3f f9 91 f2 f6 7c c7 b3 1d 20 88
-    0050: a0 ba 0c 85 e1 cf cb 51 c0 2e ef 80 76 b2 d6 71
-    0060: 24 ad 6b db ff fe ed 84 4e 8c bb d3 a5 2f be c8
-    0070: 0e 8f d1 a6 86 e3 62 b0 87 ec b9 78 81 e0 4d 5a
-    0080: 7a 79 14 29 56 e8 4a 8e 18 c5 ca b7 25 de 99 c3
-    0090: 2a 65 30 1a ea fb a1 89 35 a4 09 a3 c1 d8 2d b8
-    00a0: 60 47 39 bd 1f 05 5e 43 b1 dd e9 1c af 9b fa 01
-    00b0: f7 08 75 b6 82 ce 42 e2 cc 9e eb 27 22 df bf fc
-    00c0: 0d d0 95 23 d2 a8 7e 74 4c d7 12 7f fd 83 1e 28
-    00d0: 64 54 3c 21 dc f3 93 59 8b 7b 00 48 e7 6c d5 c9
-    00e0: 70 9f ac 41 0b f0 19 b5 8d 16 d4 f1 92 9d 66 44
-    00f0: 4b 15 45 f8 0f 57 34 32 50 52 ee 3b 5c 37 e6 1b
-
-_Hint #1._ Pay attention to key endianness.
-
-_Hint #2._ Seasoned designers write a reference design that implements the same algorithm in a high-level software language, and make sure that the circuit behaviour matches the reference step-by-step.
-
-Again, check that, starting from `task2`, the ARC4 state memory is accessible in simulation via either
-
-    s.altsyncram_component.m_default.altsyncram_inst.mem_data
-
-in RTL simulation, and
-
-    \s|altsyncram_component|auto_generated|altsyncram1|ram_block3a0 .ram_core0.ram_core0.mem
-
-in netlist simulation.
-
-
-### Task 3: The Pseudo-Random Generation Algorithm
+### The Pseudo-Random Generation Algorithm
 
 The final phase of ARC4 generates the bytestream that is then xor'd with the input plaintext to encrypt the message, or, as in our case, with the input ciphertext to decrypt it. We don't need the bytestream by itself, so in this task we will combine both.
 
@@ -176,28 +114,8 @@ You can check that your circuit is working on the FPGA by using key `'h1E4600` t
 
 (this is just the ciphertext itself, without the length prefix). You will also find this in $readmemh() format and MIF format as `test1.{memh,mif}` (these files include the length prefix). The result should be a sentence in English.
 
-In simulation, you will need a shorter key unless you are _very_ patient — try using `'h000018` to decrypt this ciphertext:
 
-    56 C1 D4 8C 33 C5 52 01 04 DE CF 12 22 51 FF 1B 36 81 C7 FD C4 F2 88 5E 16 9A B5 D3 15 F3 24 7E 4A 8A 2C B9 43 18 2C B5 91 7A E7 43 0D 27 F6 8E F9 18 79 70 91
-
-(this is `test2.{memh,mif}`). This is another sentence.
-
-Remember to check that the instance hierarchy for the memories is correct, since the autograder will use it to test your code. Starting from `task3`, the memories should be accessible as
-
-    ct.altsyncram_component.m_default.altsyncram_inst.mem_data
-    pt.altsyncram_component.m_default.altsyncram_inst.mem_data
-    a4.s.altsyncram_component.m_default.altsyncram_inst.mem_data
-
-in RTL simulation, and
-
-    \ct|altsyncram_component|auto_generated|altsyncram1|ram_block3a0 .ram_core0.ram_core0.mem
-    \pt|altsyncram_component|auto_generated|altsyncram1|ram_block3a0 .ram_core0.ram_core0.mem
-    \a4|s|altsyncram_component|auto_generated|altsyncram1|ram_block3a0 .ram_core0.ram_core0.mem
-
-in netlist simulation.
-
-
-### Task 4: Cracking ARC4
+### Cracking ARC4
 
 Now comes the shaken-not-stirred part: you will decrypt some encrypted messages _without_ knowing the key ahead of time.
 
@@ -234,7 +152,7 @@ in RTL simulation, and
 in netlist simulation.
 
 
-### Task 5: Cracking in parallel
+### Cracking in parallel
 
 To speed up cracking, we will now run two `crack` modules at the same time: the first will start the search at 0 and increment by 2, and the second will start at 1 and also increment by 2. You will implement this in `doublecrack`. The `doublecrack` module instantiates two `crack` modules. For this task (and only in this folder), you may **add** ports to the `crack` module in this task, but you **may not** remove or modify existing ports.
 
