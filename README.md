@@ -36,7 +36,7 @@ and proceeds as shown in this pseudocode:
     for k = 0 to message_length-1:
         plaintext[k] = pad[k] xor ciphertext[k]  -- xor each byte
 
-The length of the secret key that we will use is 24 bits (3 bytes) to ensure that you can “crack” the encryption in a reasonable amount of time.
+The length of the secret key that we will use is 24 bits (3 bytes) to ensure that we can “crack” the encryption in a reasonable amount of time.
 
 Note that the key is stored [big-endian](https://en.wikipedia.org/wiki/Endianness). The following diagram shows the values of key[0], key[1], and key[2] for the 24-bit secret key of 'b000000110101111100111100 = 'h035F3C.
 
@@ -112,19 +112,9 @@ Now to decrypt some encrypted messages _without_ knowing the key ahead of time w
 
 The messages that we are looking for are human-readable. An encrypted message is deemed to be cracked if its characters consist entirely of byte values between 'h20 and 'h7E inclusive (i.e., readable ASCII).
 
-The `crack` module is very much like `arc4`, but both _S_ and _PT_ are now internal, _key_ is now an output, and the new _key_valid_ output indicates that _key_ may be read. On `en`, this module should sequentially search through the key space starting from key 'h000000 and incrementing by 1 every iteration (to make marking tractable). Once the computation is complete, it should assert `rdy` and, only if it found a valid decryption key, also set `key_valid` to 1 and `key` to the discovered secret key. If `key_valid` is 1, the `pt` memory inside `crack` should contain the corresponding plaintext in length-prefixed format.
+The `crack` module is very much like `arc4`, but both _S_ and _PT_ are now internal, _key_ is now an output, and the new _key_valid_ output indicates that _key_ may be read. On `en`, this module should sequentially search through the key space starting from key 'h000000 and incrementing by 1 every iteration. Once the computation is complete, it should assert `rdy` and, only if it found a valid decryption key, also set `key_valid` to 1 and `key` to the discovered secret key. If `key_valid` is 1, the `pt` memory inside `crack` should contain the corresponding plaintext in length-prefixed format.
 
-To help you debug, here are two encrypted sentences for which the keys are very small numbers (≤ 10):
-
-    4D 21 74 1A E2 D6 91 12 F3 BA 6B 95 D1 E3 68 5A 9E 7A 60 A7 87 01 54 64 20 DD 84 9A A2 A9 B8 A0 4B 86 30 1D A6 65 E0 4A F7 A6 54 D6 43
-
-    83 7B 02 41 0F 0E C8 35 A4 EB 87 00 0F A7 DB 4E 28 1A 0C 30 CD 95 32 DF 3B 96 58 7D 70 29 2A 0B 69 BF E9 53 61 F0 73 6C E1 C2 94 D2 31 8E 34 40 6F AF 52 53 2D 95 20 28 60 D1 DB A6 1C 87 E1 83 BD 81 A6 25 FB A2 93 A8 E6 F4 AD 20
-
-(Don't forget about the length when loading them into the _CT_ memory!) Naturally, the unit tests go in `tb_rtl_crack.sv` and `tb_syn_crack.sv`.
-
-The toplevel `task4` module should, on reset, use `crack` to process the message in the _CT_ memory and display the _key_ on the seven-segment displays on the DE1-SoC: if the key is 'h123456 then the displays should read “123456” left-to-right when the board is turned so that the switch bank and the button keys are towards you. The displays should be _blank_ while the circuit is computing (i.e., you should only set them after you have found a key), and should display “------” if you searched through the entire key space but no possible 24-bit key resulted in a cracked message (as defined above). The hex digits should look like this:
-
-<p align="center"><img src="figures/hex-digits.svg" title="hex digits" width="60%" height="60%"></p>
+You can find this module in the `crack.sv` module in the `src` folder. 
 
 ### Cracking in parallel
 
