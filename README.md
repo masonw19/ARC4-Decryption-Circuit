@@ -45,8 +45,6 @@ Note that the key is stored [big-endian](https://en.wikipedia.org/wiki/Endiannes
 
 ### The ready-enable microprotocol
 
-In some of the previous labs, you used a simple start/done microprotocol to let your circuit take a variable number of cycles. In this lab, we will be using a slightly more sophisticated ready/enable microprotocol to achieve the same goal.
-
 The handshake has two sides: the “caller” and the “callee.” Whenever the callee is ready to accept a request, it asserts its `rdy` signal. If `rdy` is asserted, the caller may assert `en` to make a “request” to the callee. The following timing diagram illustrates this:
 
 <p align="center"><img src="figures/rdy-en.svg" title="ready-enable microprotocol" width="65%" height="65%"></p>
@@ -57,13 +55,12 @@ Whenever `rdy` is asserted, it means that the callee is able to accept a request
 
 <p align="center"><img src="figures/rdy-en-singleclock.svg" title="ready-enable microprotocol" width="65%" height="65%"></p>
 
-Unlike our old start/done scheme, this microprotocol allows the callee to accept multiple requests and buffer them. You do not need to implement that in this lab, although it might be helpful if you decide to expand on this lab. You **do**, however, need to make sure you deassert `rdy` unless you can immediately accept another request.
+This microprotocol allows the callee to accept multiple requests and buffer them.
 
 Finally, some requests come with arguments. For example, Task 3 requires you to write a decrypt module which follows the ready/enable microprotocol and takes the secret key as an argument. In this case, the argument port must be valid **at the same time** as the corresponding `en` signal, as in this diagram:
 
 <p align="center"><img src="figures/rdy-en-arg.svg" title="ready-enable microprotocol with an argument" width="65%" height="65%"></p>
 
-Note: Be careful about combinational loops. For example, since `en` can derive from `rdy` through combinational logic, `rdy` cannot also derive from `en` combinationally; otherwise, the two signals will form a wire loop.
 
 ### Task 1: ARC4 state initialization
 
