@@ -80,7 +80,7 @@ Many symmetric ciphers, including ARC4, have a phase called the _Key-Scheduling 
         j = (j + s[i] + key[i mod keylength]) mod 256   -- for us, keylength is 3
         swap values of s[i] and s[j]
 
-In folder `src` you will find `ksa4.sv`, which you will fill out to implement the KSA phase. Like `init`, the `ksa` module will implement the ready/enable microprotocol.
+In folder `src` you will find `ksa4.sv`, which implements the KSA phase. Like `init`, the `ksa` module will implement the ready/enable microprotocol.
 
 ### The Pseudo-Random Generation Algorithm
 
@@ -96,24 +96,15 @@ The final phase of ARC4 generates the bytestream that is then xor'd with the inp
     for k = 0 to message_length-1:
         plaintext[k] = pad[k] xor ciphertext[k]  -- xor each byte
 
-First, generate two additional memories: one to hold the ciphertext (instance name _CT_), and another where you will write the plaintext (instance name _PT_). Both will be 8-bit wide and 256 8-bit words deep, and will connect to your ARC4 decryption module:
+With Quartus, we will first generate two additional memories: one to hold the ciphertext (instance name _CT_), and another where you will write the plaintext (instance name _PT_). Both will be 8-bit wide and 256 8-bit words deep, and will connect to your ARC4 decryption module:
 
 <p align="center"><img src="figures/arc4-module.svg" title="decryption module" width="50%" height="50%"></p>
 
 Both the plaintext and ciphertext are stored starting at address 0 as length-prefixed strings (described earlier).
 
-Then, implement the bytestream/xor functionality in the `prga.sv` file in the `task3` folder. This has interfaces for all three memories. As before, the module obeys the rdy/en protocol. Note that the `prga` module **must not** include the functionality of `init` or `ksa`. Comprehensively test this in `tb_rtl_prga.sv` and `tb_syn_prga.sv`.
+In folder `src` you will find `prga3.sv`, which implements the PRGA phase. The `prga` module will also follow the ready/enable microprotocol.
 
-Next, complete the ARC4 algorithm by filling out `arc4.sv`. This should instantiate the _S_ memory and the three submodules, and activate everything in the right order to decrypt the ciphertext in the _CT_ memory (a length-prefixed string starting at address 0) and write the plaintext to _PT_ (which should also be a length-prefixed string at address 0). The `arc4` module also obeys rdy/en, and makes no assumptions about the key. The comprehensive testbenches go in `tb_rtl_arc4.sv` and `tb_syn_arc4.sv`.
-
-Finally, implement the toplevel `task3` module in `task3.sv`. The template file instantiates the _CT_ and _PT_ memories; you will need to add `arc4` and connect everything together. As in Task 2, hardwire the top 14 bits of the key to 0 _in the toplevel only_ and use the switches for the rest; assign reset to `KEY[3]`. The testbenches for this will be in `tb_rtl_task3.sv` and `tb_syn_task3.sv`.
-
-You can check that your circuit is working on the FPGA by using key `'h1E4600` to decrypt the following ciphertext:
-
-    A7 FD 08 01 84 45 68 85 82 5C 85 97 43 4D E7 07 25 0F 9A EC C2 6A 4E A7 49 E0 EB 71 BC AC C7 D7 57 E9 E2 B1 1B 09 52 33 92 C1 B7 E8 4C A1 D8 57 2F FA B8 72 B9 3A FC 01 C3 E5 18 32 DF BB 06 32 2E 4A 01 63 10 10 16 B5 D8
-
-(this is just the ciphertext itself, without the length prefix). You will also find this in $readmemh() format and MIF format as `test1.{memh,mif}` (these files include the length prefix). The result should be a sentence in English.
-
+We complete the ARC4 algorithm with the `arc4_3.sv` file. This should instantiate the _S_ memory and the three submodules, and activate everything in the right order to decrypt the ciphertext in the _CT_ memory (a length-prefixed string starting at address 0) and write the plaintext to _PT_ (which should also be a length-prefixed string at address 0). The `arc4` module also obeys rdy/en, and makes no assumptions about the key.
 
 ### Cracking ARC4
 
