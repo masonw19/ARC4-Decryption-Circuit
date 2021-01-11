@@ -38,11 +38,6 @@ and proceeds as shown in this pseudocode:
 
 The length of the secret key that we will use is 24 bits (3 bytes) to ensure that we can “crack” the encryption in a reasonable amount of time.
 
-Note that the key is stored [big-endian](https://en.wikipedia.org/wiki/Endianness). The following diagram shows the values of key[0], key[1], and key[2] for the 24-bit secret key of 'b000000110101111100111100 = 'h035F3C.
-
-<p align="center"><img src="figures/key-endianness.svg" title="key endianness" width="60%" height="60%"></p>
-
-
 ### The ready-enable microprotocol
 
 The handshake has two sides: the “caller” and the “callee.” Whenever the callee is ready to accept a request, it asserts its `rdy` signal. If `rdy` is asserted, the caller may assert `en` to make a “request” to the callee. The following timing diagram illustrates this:
