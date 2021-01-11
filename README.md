@@ -117,4 +117,4 @@ To speed up cracking, we will now run two `crack` modules at the same time: the 
 
 #### Credit
 
-This project is made as part of a lab for a course that I had taken at the University of British Columbia's courses. 
+This project is made as part of a lab for a course that I had taken at the University of British Columbia. 
